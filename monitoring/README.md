@@ -1,6 +1,6 @@
 # monitoring
 
-A monitoring stack powered Prometheus + Grafana + Node Exporter.
+A monitoring stack powered Prometheus, Grafana, cAdvisor and Node Exporter.
 
 ## Structure
 
@@ -26,6 +26,7 @@ A monitoring stack powered Prometheus + Grafana + Node Exporter.
 | prometheus    | http://<SERVER_ADDRESS>:9090                           | Collects and stores metrcics in a time-series DB (TSDB) |
 | grafana       | http://<SERVER_ADDRESS>:3000 (login/pass: admin/admin) | Visualizes metrcis, manages dashboards and alerts       |
 | node-exporter |                                                        | Collects host OS metrics                                |
+| cadvisor      | http://<SERVER_ADDRESS>:8080                           | Collects Docker container metrics                       |
 
 ## Deploy
 
@@ -41,7 +42,12 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Pre-installed dashboards are available on the `Dashboards` tab.
+## Preinstalled Dashboards
+
+| Dashboard Path                                     | Upstream Source                                                 |
+| :------------------------------------------------- | :-------------------------------------------------------------- |
+| `Dashboards / Infrastructure / Node Exporter Full` | https://grafana.com/grafana/dashboards/1860-node-exporter-full/ |
+| `Dashboards / Infrastructure / Docker monitoring`  | https://grafana.com/grafana/dashboards/15798-docker-monitoring/ |
 
 ## Author
 

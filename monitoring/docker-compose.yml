@@ -8,7 +8,7 @@ volumes:
 
 services:
   prometheus:
-    image: prom/prometheus:${PROMETHEUS_VERSION:-latest}
+    image: prom/prometheus:v${PROMETHEUS_VERSION:-latest}
     container_name: prometheus
     restart: unless-stopped
     deploy:
@@ -69,7 +69,7 @@ services:
       - monitoring
 
   node-exporter:
-    image: prom/node-exporter:${NODE_EXPORTER_VERSION:-latest}
+    image: prom/node-exporter:v${NODE_EXPORTER_VERSION:-latest}
     container_name: node-exporter
     restart: unless-stopped
     deploy:
@@ -85,6 +85,30 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      - '/:/host:ro,rslave'
+      - /:/host:ro,rslave
     network_mode: host
     pid: host
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v${CADVISOR_VERSION:-latest}
+    container_name: cadvisor
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: ${CADVISOR_CPU_LIMIT:-0.50}
+          memory: ${CADVISOR_MEMORY_LIMIT:-512M}
+        reservations:
+          memory: ${CADVISOR_MEMORY_RESERVE:-256M}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - 8080:8080
+    networks:
+      - monitoring
