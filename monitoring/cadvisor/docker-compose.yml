@@ -1,0 +1,28 @@
+services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:${CADVISOR_VERSION:-latest}
+    container_name: cadvisor
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: ${CADVISOR_CPU_LIMIT:-0.50}
+          memory: ${CADVISOR_MEMORY_LIMIT:-512M}
+        reservations:
+          memory: ${CADVISOR_MEMORY_RESERVE:-256M}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - monitoring
+    ports:
+      - 8080:8080
+
+networks:
+  monitoring:
+    external: true

@@ -1,46 +1,82 @@
-# monitoring
+# Infrastructure Monitoring
 
-A monitoring stack powered Prometheus, Grafana, cAdvisor and Node Exporter.
+A decentralized monitoring based on independent Docker Compose service stacks.
 
-## Structure
+## Key Configuration Paths
 
-```text
-├── docker-compose.yml
-├── README.md
-├── prometheus/
-│   └── prometheus.yml
-└── grafana/
-    └── provisioning/
-        ├── dashboards/
-        │   ├── dashboards.yaml
-        │   └── my-dashboards/       # User dashboards in JSON format are stored here.
-        └── datasources/
-            └── datasources.yaml     # Automatically binds dashboards to Prometheus.
+- `prometheus/config/prometheus.yml` - Main Prometheus scrape target configuration file.
+- `grafana/provisioning/datasources/datasources.yml` - Automated data source provisioning rules.
+- `grafana/provisioning/dashboards/` - Preinstalled dashboards.
 
-```
+## Services Overview
 
-## Services
+| Service       | Access                                                 | Description                                            |
+| :------------ | :----------------------------------------------------- | :----------------------------------------------------- |
+| prometheus    | http://<SERVER_ADDRESS>:9090                           | Collects and stores metrics in a time-series DB (TSDB) |
+| grafana       | http://<SERVER_ADDRESS>:3000 (login/pass: admin/admin) | Visualizes metrics, manages dashboards and alerts      |
+| node-exporter | Shared via host network(Port 9100)                     | Exposes host OS metrics                                |
+| cadvisor      | http://<SERVER_ADDRESS>:8080                           | Exposes Docker container metrics                       |
 
-| Service       | Access                                                 | Description                                             |
-| :------------ | :----------------------------------------------------- | :------------------------------------------------------ |
-| prometheus    | http://<SERVER_ADDRESS>:9090                           | Collects and stores metrcics in a time-series DB (TSDB) |
-| grafana       | http://<SERVER_ADDRESS>:3000 (login/pass: admin/admin) | Visualizes metrcis, manages dashboards and alerts       |
-| node-exporter |                                                        | Collects host OS metrics                                |
-| cadvisor      | http://<SERVER_ADDRESS>:8080                           | Collects Docker container metrics                       |
+## Deployment
 
-## Deploy
+1. Create a local `.env` runtime configurations file (optional)
+   ```bash
+   cp <stack_dir>/.env.example <stack_dir>/.env
+   ```
+2. Create shared network to the docker monitoring containers:
 
-1. Create a `.env` configurations file (optional)
+   ```bash
+   docker network create monitoring
+   ```
 
-```bash
-cp .env.example .env
-```
-
-2. Deploy the stack
+### Server monitoring setup
 
 ```bash
-docker compose up -d
+for stack in {cadvisor,prometheus,node-exporter,grafana}; do
+  docker compose -f "monitoring/$stack/docker-compose.yml" up -d;
+done
 ```
+
+### Remote hosts agents setup
+
+#### 1. On remote host
+
+- **Configure the environment files first as shown in Step 1 of the Deployment section**
+
+* Host metrics:
+
+  ```bash
+  docker compose -f node-exporter/docker-compose.yml up -d
+  ```
+
+* Docker container metrics:
+  **Create shared network as shown in Step 2 of the Deployment section**
+  ```bash
+  docker compose -f cadvisor/docker-compose.yml up -d
+  ```
+
+#### 2. On server monitoring host
+
+1. Add the remote hosts address to `prometheus/config/prometheus.yml`:
+
+   ```yaml
+   scrape_configs:
+     - job_name: "node-exporter"
+       static_configs:
+         - targets: ["host.docker.internal:9100"] # Local host (Saturn)
+         - targets: ["<REMOTE_HOST_ADDRESS>:9100"] # Remote Node
+
+     - job_name: "cadvisor"
+       static_configs:
+         - targets: ["cadvisor:8080"] # Local cAdvisor container
+         - targets: ["<REMOTE_HOST_ADDRESS>:8080"] # Remote cAdvisor
+   ```
+
+2. Apply Prometheus config
+
+   ```bash
+   docker compose -f prometheus/docker-compose.yml restart
+   ```
 
 ## Preinstalled Dashboards
 

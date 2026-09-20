@@ -1,0 +1,21 @@
+services:
+  node-exporter:
+    image: prom/node-exporter:v${NODE_EXPORTER_VERSION:-latest}
+    container_name: node-exporter
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: ${NODE_EXPORTER_CPU_LIMIT:-0.50}
+          memory: ${NODE_EXPORTER_MEMORY_LIMIT:-128M}
+        reservations: 
+          memory: ${NODE_EXPORTER_MEMORY_RESERVE:-64M}
+    command:
+      - '--path.rootfs=/host'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker)($$|/)'
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /:/host:ro,rslave
+    network_mode: host
+    pid: host

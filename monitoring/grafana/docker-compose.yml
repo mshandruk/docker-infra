@@ -1,0 +1,30 @@
+services:
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-latest}
+    container_name: grafana
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: ${GRAFANA_CPU_LIMIT:-0.50}
+          memory: ${GRAFANA_MEMORY_LIMIT:-1G}
+        reservations:
+          memory: ${GRAFANA_MEMORY_RESERVE:-512M}
+    environment:
+      - TZ=${TZ:-UTC}
+    ports:
+      - 3000:3000
+    networks:
+      - monitoring
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - grafana_data:/var/lib/grafana
+      - ./provisioning/:/etc/grafana/provisioning:ro
+
+volumes:
+  grafana_data:
+
+networks:
+  monitoring:
+    external: true
