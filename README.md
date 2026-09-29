@@ -16,9 +16,10 @@ git clone https://github.com/mshandruk/ansible-infra.git
 
 ## Available stacks
 
-| Stack                              | Description          |
-| :--------------------------------- | :------------------- |
-| [monitoring](monitoring/README.md) | Grafana + Prometheus |
+| Stack                              | Description              |
+| :--------------------------------- | :----------------------- |
+| [monitoring](monitoring/README.md) | Grafana + Prometheus     |
+| [postgres](dbs/postgres/README.md) | PostgreSQL + data volume |
 
 ## Author
 

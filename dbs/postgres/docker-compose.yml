@@ -1,0 +1,28 @@
+services:
+  db:
+    build:
+      context: ../../images/postgres
+      args:
+        CODE_VERSION: ${POSTGRES_VERSION:-latest}
+        TARGET_LOCALE: ${TARGET_LOCALE:-en_US}
+        TARGET_ENCODING: ${TARGET_ENCODING:-UTF-8}
+    container_name: db
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required POSTGRES_PASSWORD}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - postgres_data:${POSTGRES_DATA_PATH:?required POSTGRES_DATA_PATH}
+    ports:
+      - 5432:5432
+    networks:
+      - shared-infra-network
+
+networks:
+  shared-infra-network:
+    name: shared-infra-network
+    driver: bridge
+
+volumes:
+  postgres_data:
