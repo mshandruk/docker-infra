@@ -21,6 +21,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - postgres_data:${POSTGRES_DATA_PATH:?required POSTGRES_DATA_PATH}
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./config/conf.d:/etc/postgresql/conf.d
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     ports:
       - 5432:5432
     networks:

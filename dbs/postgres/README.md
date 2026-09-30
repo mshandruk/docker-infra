@@ -6,57 +6,54 @@
 cp .env.example .env
 ```
 
-And update the settings in .env.
+- Change value `POSTGRES_PASSWORD` and other settings.
 
-2. Run
+2. Run the container:
 
 ```bash
 docker compose up -d --build
 ```
 
-3. Create role
+3. Create user and database
 
 ```bash
-docker compose exec db psql -h localhost -U postgres
+docker compose exec -it db psql -U postgres
 ```
 
 ```bash
 CREATE ROLE <some_user> WITH LOGIN PASSWORD '<secret>';
-```
-
-```bash
 
 CREATE DATABASE <database_name>
 WITH ENCODING='UTF-8'
-     LC_COLLATE='<your_target_locale>.<your_target_encoding>'
-     LC_CTYPE='<your_target_locale>.<your_target_encoding>'
+     LC_COLLATE='en_US.UTF-8'
+     LC_CTYPE='en_US.UTF-8'
      OWNER <some_user>;
 ```
 
 ## Example usage
 
-### Pgcli
+### SQL console
 
-1. Install postgres client
+1. Install postgres console client:
 
 ```bash
 apt install -y pgcli
 ```
 
-2. Connect to postgres server
+2. Connect to postgres server:
 
 ```bash
-pgcli -h localhost -U <some_user> -d <database_name>
+pgcli -h localhost -p 5432 -U <some_user> -d <database_name>
 ```
 
-### Application server
+### Application
 
 ```yaml
 services:
   web-app:
-    image: some-app-image:latest
+    image: web-app-image:latest
     environment:
-      DATABASE_URL: "postgresql://<some_user>:<db_password>@db:5432/<app_db>"
+      DATABASE_URL: "postgresql://<some_user>:<password>@db:5432/<app_db>"
     networks:
       - shared-infra-network
 
@@ -64,3 +61,34 @@ networks:
   shared-infra-network:
     external: true
 ```
+
+## Custom configuration
+
+The parameters in `config/postgresql.conf` must be overridden:
+
+1. Create configuration file:
+
+```bash
+touch config/conf.d/custom.conf
+```
+
+2. Add custom parameters:
+
+```text
+max_connections = 150
+work_mem = 4MB
+```
+
+3. Apply configuration:
+
+```bash
+docker compose restart db
+```
+
+Validate:
+
+```bash
+docker compose exec -it db psql -U postgres -c "show max_connections;"
+```
+
+[PgTune](https://pgtune.fariton.ru)
