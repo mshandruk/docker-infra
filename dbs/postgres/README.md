@@ -7,13 +7,14 @@ Deploying PostgreSQL with Docker compose.
    ```bash
    cp .env.example .env
    ```
+
     - Change value `POSTGRES_PASSWORD` and other settings.
 
 2. Run the container:
 
-    ```bash
-    docker compose up -d --build
-    ```
+   ```bash
+   docker compose up -d --build
+   ```
 
 3. Create user and database
 
@@ -23,7 +24,7 @@ Deploying PostgreSQL with Docker compose.
 
    ```bash
    CREATE ROLE <some_user> WITH LOGIN PASSWORD '<secret>';
-   
+
    CREATE DATABASE <database_name>
    WITH ENCODING='UTF-8'
         LC_COLLATE='en_US.UTF-8'
@@ -65,10 +66,6 @@ networks:
 
 ## Custom configuration
 
-Use the [PgTune generator](https://pgtune.fariton.ru) to generate performance tuning settings.
-
-The parameters in `config/postgresql.conf` must be overridden.
-
 1. Create a configuration file:
 
    ```bash
@@ -77,18 +74,48 @@ The parameters in `config/postgresql.conf` must be overridden.
 
 2. Add custom parameters:
 
+   Use the [PgTune generator](https://pgtune.fariton.ru) to generate performance tuning settings.
+
    ```text
-   max_connections = 150
-   work_mem = 4MB
+   # DB Version: 16
+   # OS Type: linux
+   # DB Type: mixed
+   # Total Memory (RAM): 4 GB
+   # CPUs num: 2
+   # Data Storage: ssd
+
+   max_connections = 100
+   shared_buffers = 1GB
+   effective_cache_size = 3GB
+   maintenance_work_mem = 256MB
+   checkpoint_completion_target = 0.9
+   wal_buffers = 16MB
+   default_statistics_target = 100
+   random_page_cost = 1.1
+   effective_io_concurrency = 200
+   work_mem = 2621kB
+   huge_pages = off
+   min_wal_size = 1GB
+   max_wal_size = 4GB
    ```
 
-3. Apply configuration:
+3. Set Docker container limits in .env
 
-   ```bash
-   docker compose restart db
+   ```text
+   # Container limits
+   POSTGRES_CPU_LIMIT=2
+   POSTGRES_MEMORY_LIMIT=4G
+   POSTGRES_MEMORY_RESERVE=4G
    ```
 
-   How to check:
+4. Apply settings:
+
    ```bash
-   docker compose exec -it db psql -U postgres -c "show max_connections;"
+   docker compose up -d --build
+   ```
+
+5. Validate settings:
+
+   ```bash
+   docker compose exec -it db psql -U postgres -c "show shared_buffers;"
    ```

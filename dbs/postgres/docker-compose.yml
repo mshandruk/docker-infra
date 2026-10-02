@@ -17,12 +17,12 @@ services:
           memory: ${POSTGRES_MEMORY_RESERVE:-4G}
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required POSTGRES_PASSWORD}
+      TZ: Europe/Moscow
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - postgres_data:${POSTGRES_DATA_PATH:?required POSTGRES_DATA_PATH}
-      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - ./config/conf.d:/etc/postgresql/conf.d
+      - ./config:/etc/postgresql:ro
     command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     ports:
       - 5432:5432
